@@ -15,7 +15,7 @@ func Router() http.Handler {
 	s := r.PathPrefix("/api/v1").Subrouter()
 
 	s.HandleFunc("/hello-world", helloWorld).Methods(http.MethodGet)
-	s.HandleFunc("/kitty", getKitty).Methods(http.MethodGet)
+	s.HandleFunc("/kitty/{name}", getKitty).Methods(http.MethodGet)
 	return logMiddleware(r)
 }
 
@@ -30,8 +30,10 @@ type Kitty struct {
 	Name string `json:"name"`
 }
 
-func getKitty(w http.ResponseWriter, _ *http.Request) {
-	cat := Kitty{"Кот"}
+func getKitty(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	query := r.URL.Query().Get("age")
+	cat := Kitty{vars["name"] + query}
 	b, err := json.Marshal(cat)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
