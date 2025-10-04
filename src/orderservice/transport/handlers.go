@@ -42,7 +42,7 @@ func getKitty(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = io.WriteString(w, string(b))
+	_, err = io.Writer.Write(w, b)
 	if err != nil {
 		log.WithError(err).Error("Failed to write response")
 	}
