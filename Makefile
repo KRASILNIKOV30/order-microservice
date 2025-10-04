@@ -4,7 +4,7 @@ modules:
 	go mod tidy
 
 build: modules
-	go build main.go
+	go build -o bin/hello ./cmd/hello/main.go
 
 test:
 	go test ./...

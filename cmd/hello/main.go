@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
-	"orderservice/transport"
+	"orderservice/pkg/hello/transport"
 	"os"
 	"os/signal"
 	"syscall"
