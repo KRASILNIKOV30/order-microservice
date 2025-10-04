@@ -30,15 +30,19 @@ type Kitty struct {
 	Name string `json:"name"`
 }
 
-func getKitty(w http.ResponseWriter, r *http.Request) {
+func getKitty(w http.ResponseWriter, _ *http.Request) {
 	cat := Kitty{"Кот"}
-	b, _ := json.Marshal(cat)
+	b, err := json.Marshal(cat)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err := io.WriteString(w, string(b))
+	_, err = io.WriteString(w, string(b))
 	if err != nil {
-		return
+		log.WithError(err).Error("Failed to write response")
 	}
 }
 
