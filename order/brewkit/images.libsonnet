@@ -1,6 +1,6 @@
 // Here placed all images used in this project for simple upgrade in future
 {
-  gobuilder: "golang:1.23-bookworm",
+  gobuilder: "golang:1.24-alpine",
   golangcilint: "golangci/golangci-lint:v1.64.5",
 
   // code generator

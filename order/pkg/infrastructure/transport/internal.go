@@ -3,10 +3,10 @@ package transport
 import (
 	"context"
 
-	api "microservicetemplate/api/server/microservicetemplateinternal"
+	api "order/api/server/orderinternal"
 )
 
-func NewInternalAPI() api.MicroserviceTemplateInternalServiceServer {
+func NewInternalAPI() api.OrderInternalServiceServer {
 	return &internalAPI{}
 }
 

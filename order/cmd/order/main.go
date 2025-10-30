@@ -14,7 +14,7 @@ import (
 
 // TODO:  appID используется как префикс для env-переменных
 
-const appID = "microserviceTemplate"
+const appID = "order"
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
