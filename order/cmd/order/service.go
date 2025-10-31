@@ -3,15 +3,15 @@ package main
 import (
 	"context"
 	"net"
-	"order/api/server/orderinternal"
-	"order/pkg/infrastructure/transport"
-
 	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
+
+	api "order/api/server/orderinternal"
+	"order/pkg/infrastructure/transport"
 )
 
 const shutdownTimeout = 30 * time.Second
@@ -48,7 +48,7 @@ func startGRPCServer(
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(makeGrpcUnaryInterceptor(logger)))
 
 	// TODO: зарегистрировать свой сервер вместо шаблонного
-	orderinternal.RegisterOrderInternalServiceServer(grpcServer, transport.NewInternalAPI())
+	api.RegisterOrderInternalServiceServer(grpcServer, transport.NewInternalAPI())
 
 	listener, err := net.Listen("tcp", config.ServeGRPCAddress)
 	if err != nil {

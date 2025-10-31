@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.23-bookworm AS builder
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --no-install-suggests \
@@ -9,8 +9,8 @@ RUN apt-get update && \
     groupadd -g 1001 microuser && \
     useradd -u 1001 -r -g 1001 -s /sbin/nologin -c "go microservice user" microuser
 
-ADD bin/order /app/bin/
-ADD data /app/data
+ADD ./bin/order /app/bin/
+ADD ./data /app/data
 WORKDIR /app
 
 USER microuser

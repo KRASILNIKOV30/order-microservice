@@ -5,7 +5,7 @@ services:
     image: order
     container_name: order
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
     ports:
       - "8081:8081" # GRPC API port

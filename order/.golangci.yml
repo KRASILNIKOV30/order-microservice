@@ -1,49 +1,59 @@
+version: "2"
 run:
-  timeout: 5m
   issues-exit-code: 1
-
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - typecheck
-    - unused
+    - asciicheck
     - bodyclose
-    - importas
     - dogsled
     - dupl
     - gochecknoinits
     - gocognit
+    - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - goimports
-    - revive
     - gosec
+    - importas
     - misspell
     - nakedret
+    - nestif
     - prealloc
-    - stylecheck
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
     - unconvert
     - whitespace
-    - rowserrcheck
-    - goconst
-    - asciicheck
-    - nestif
-    - sqlclosecheck
-
-linters-settings:
-  govet:
-    check-shadowing: true
-  goimports:
-    local-prefixes: bff
-  gocritic:
-    disabled-checks:
-      - sloppyReassign
-      - whyNoLint
-    enabled-tags:
-      - experimental
-      - opinionated
+  settings:
+    gocritic:
+      disabled-checks:
+        - sloppyReassign
+        - whyNoLint
+      enabled-tags:
+        - experimental
+        - opinionated
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - bff
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
