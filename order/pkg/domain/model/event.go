@@ -7,13 +7,14 @@ type OrderCreated struct {
 	CustomerID uuid.UUID
 }
 
+func (e OrderCreated) Type() string {
+	return "OrderCreated"
+}
+
 type OrderDeleted struct {
 	OrderID uuid.UUID
 }
 
-func (e OrderCreated) Type() string {
-	return "OrderCreated"
-}
 func (e OrderDeleted) Type() string {
 	return "OrderDeleted"
 }
@@ -26,4 +27,14 @@ type OrderItemChanged struct {
 
 func (e OrderItemChanged) Type() string {
 	return "OrderItemChanged"
+}
+
+type OrderStatusChanged struct {
+	OrderID   uuid.UUID
+	OldStatus OrderStatus
+	NewStatus OrderStatus
+}
+
+func (e OrderStatusChanged) Type() string {
+	return "OrderStatusChanged"
 }

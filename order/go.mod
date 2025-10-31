@@ -1,7 +1,5 @@
 module order
 
-// TODO: поменять имя
-
 go 1.23.0
 
 require (

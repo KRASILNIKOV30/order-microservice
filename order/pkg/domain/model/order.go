@@ -7,7 +7,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrOrderNotFound = errors.New("order not found")
+var (
+	ErrOrderNotFound = errors.New("order not found")
+	ErrItemNotFound  = errors.New("item not found")
+)
 
 type OrderStatus int
 

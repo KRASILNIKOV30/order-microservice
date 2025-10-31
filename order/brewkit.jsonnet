@@ -1,7 +1,5 @@
 local project = import 'brewkit/project.libsonnet';
 
-// TODO: appID поменять
-
 local appIDs = [
     'order',
 ];

@@ -31,6 +31,7 @@ func setup() testFixture {
 
 func TestOrderService(t *testing.T) {
 	customerID := uuid.Must(uuid.NewV7())
+	productID := uuid.Must(uuid.NewV7())
 
 	t.Run("Create order", func(t *testing.T) {
 		f := setup()
@@ -55,6 +56,66 @@ func TestOrderService(t *testing.T) {
 		require.Len(t, f.eventDispatcher.events, 1)
 		require.Equal(t, model.OrderDeleted{}.Type(), f.eventDispatcher.events[0].Type())
 	})
+
+	t.Run("Set status", func(t *testing.T) {
+		f := setup()
+		orderID, _ := f.orderService.CreateOrder(customerID)
+		f.eventDispatcher.events = nil
+
+		err := f.orderService.SetStatus(orderID, model.Paid)
+
+		require.NoError(t, err)
+		require.Equal(t, model.Paid, f.repo.store[orderID].Status)
+		require.Len(t, f.eventDispatcher.events, 1)
+		event := f.eventDispatcher.events[0].(model.OrderStatusChanged)
+		require.Equal(t, model.OrderStatusChanged{}.Type(), event.Type())
+		require.Equal(t, model.Open, event.OldStatus)
+		require.Equal(t, model.Paid, event.NewStatus)
+	})
+
+	t.Run("Add item to order", func(t *testing.T) {
+		f := setup()
+		orderID, _ := f.orderService.CreateOrder(customerID)
+		f.eventDispatcher.events = nil
+
+		itemID, err := f.orderService.AddItem(orderID, productID, 99.99)
+
+		require.NoError(t, err)
+		require.Len(t, f.repo.store[orderID].Items, 1)
+		require.Equal(t, itemID, f.repo.store[orderID].Items[0].ID)
+		require.Len(t, f.eventDispatcher.events, 1)
+		event := f.eventDispatcher.events[0].(model.OrderItemChanged)
+		require.Equal(t, model.OrderItemChanged{}.Type(), event.Type())
+		require.Equal(t, []uuid.UUID{itemID}, event.AddedItems)
+	})
+
+	t.Run("Delete item from order", func(t *testing.T) {
+		f := setup()
+		orderID, _ := f.orderService.CreateOrder(customerID)
+		itemID, _ := f.orderService.AddItem(orderID, productID, 99.99)
+		f.eventDispatcher.events = nil
+
+		err := f.orderService.DeleteItem(orderID, itemID)
+
+		require.NoError(t, err)
+		require.Empty(t, f.repo.store[orderID].Items)
+		require.Len(t, f.eventDispatcher.events, 1)
+		event := f.eventDispatcher.events[0].(model.OrderItemChanged)
+		require.Equal(t, model.OrderItemChanged{}.Type(), event.Type())
+		require.Equal(t, []uuid.UUID{itemID}, event.RemovedItems)
+	})
+
+	t.Run("Fail to add item to non-open order", func(t *testing.T) {
+		f := setup()
+		orderID, _ := f.orderService.CreateOrder(customerID)
+		_ = f.orderService.SetStatus(orderID, model.Paid)
+		f.eventDispatcher.events = nil
+
+		_, err := f.orderService.AddItem(orderID, productID, 99.99)
+
+		require.ErrorIs(t, err, service.ErrInvalidOrderStatus)
+		require.Empty(t, f.eventDispatcher.events)
+	})
 }
 
 var _ model.OrderRepository = &mockOrderRepository{}
@@ -73,7 +134,7 @@ func (m *mockOrderRepository) Store(order *model.Order) error {
 }
 
 func (m *mockOrderRepository) Find(id uuid.UUID) (*model.Order, error) {
-	if order, ok := m.store[id]; ok && order.DeletedAt != nil {
+	if order, ok := m.store[id]; ok && order.DeletedAt == nil {
 		return order, nil
 	}
 	return nil, model.ErrOrderNotFound

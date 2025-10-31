@@ -42,7 +42,7 @@ type orderService struct {
 	dispatcher EventDispatcher
 }
 
-func (o orderService) CreateOrder(customerID uuid.UUID) (uuid.UUID, error) {
+func (o *orderService) CreateOrder(customerID uuid.UUID) (uuid.UUID, error) {
 	orderID, err := o.repo.NextID()
 	if err != nil {
 		return uuid.Nil, err
@@ -66,7 +66,7 @@ func (o orderService) CreateOrder(customerID uuid.UUID) (uuid.UUID, error) {
 	})
 }
 
-func (o orderService) DeleteOrder(orderID uuid.UUID) error {
+func (o *orderService) DeleteOrder(orderID uuid.UUID) error {
 	err := o.repo.Delete(orderID)
 	if err != nil {
 		return err
@@ -77,13 +77,33 @@ func (o orderService) DeleteOrder(orderID uuid.UUID) error {
 	})
 }
 
-func (o orderService) SetStatus(orderID uuid.UUID, status model.OrderStatus) error {
-	// TODO implement me
-	var _, _ = orderID, status
-	panic("implement me")
+func (o *orderService) SetStatus(orderID uuid.UUID, status model.OrderStatus) error {
+	order, err := o.repo.Find(orderID)
+	if err != nil {
+		return err
+	}
+
+	oldStatus := order.Status
+	if oldStatus == status {
+		return nil
+	}
+
+	order.Status = status
+	order.UpdatedAt = time.Now()
+
+	err = o.repo.Store(order)
+	if err != nil {
+		return err
+	}
+
+	return o.dispatcher.Dispatch(model.OrderStatusChanged{
+		OrderID:   orderID,
+		OldStatus: oldStatus,
+		NewStatus: status,
+	})
 }
 
-func (o orderService) AddItem(orderID, productID uuid.UUID, price float64) (uuid.UUID, error) {
+func (o *orderService) AddItem(orderID, productID uuid.UUID, price float64) (uuid.UUID, error) {
 	order, err := o.repo.Find(orderID)
 	if err != nil {
 		return uuid.Nil, err
@@ -102,6 +122,8 @@ func (o orderService) AddItem(orderID, productID uuid.UUID, price float64) (uuid
 		ProductID: productID,
 		Price:     price,
 	})
+	order.UpdatedAt = time.Now()
+
 	err = o.repo.Store(order)
 	if err != nil {
 		return uuid.Nil, err
@@ -113,8 +135,40 @@ func (o orderService) AddItem(orderID, productID uuid.UUID, price float64) (uuid
 	})
 }
 
-func (o orderService) DeleteItem(orderID, itemID uuid.UUID) error {
-	// TODO implement me
-	var _, _ = orderID, itemID
-	panic("implement me")
+func (o *orderService) DeleteItem(orderID, itemID uuid.UUID) error {
+	order, err := o.repo.Find(orderID)
+	if err != nil {
+		return err
+	}
+
+	if order.Status != model.Open {
+		return ErrInvalidOrderStatus
+	}
+
+	itemIndex, found := findItemIndex(order.Items, itemID)
+	if !found {
+		return model.ErrItemNotFound
+	}
+
+	order.Items = append(order.Items[:itemIndex], order.Items[itemIndex+1:]...)
+	order.UpdatedAt = time.Now()
+
+	err = o.repo.Store(order)
+	if err != nil {
+		return err
+	}
+
+	return o.dispatcher.Dispatch(model.OrderItemChanged{
+		OrderID:      orderID,
+		RemovedItems: []uuid.UUID{itemID},
+	})
+}
+
+func findItemIndex(items []model.Item, itemID uuid.UUID) (int, bool) {
+	for i, item := range items {
+		if item.ID == itemID {
+			return i, true
+		}
+	}
+	return -1, false
 }
