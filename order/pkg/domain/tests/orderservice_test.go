@@ -11,22 +11,49 @@ import (
 	"order/pkg/domain/service"
 )
 
-func TestOrderService(t *testing.T) {
-	repo := &mockOrderRepository{
-		store: map[uuid.UUID]*model.Order{},
-	}
-	eventDispatcher := &mockEventDispatcher{}
+type testFixture struct {
+	orderService    service.Order
+	repo            *mockOrderRepository
+	eventDispatcher *mockEventDispatcher
+}
 
+func setup() testFixture {
+	repo := &mockOrderRepository{store: make(map[uuid.UUID]*model.Order)}
+	eventDispatcher := &mockEventDispatcher{}
 	orderService := service.NewOrderService(repo, eventDispatcher)
 
-	customerID := uuid.Must(uuid.NewV7())
-	t.Run("Create order", func(t *testing.T) {
-		orderID, err := orderService.CreateOrder(customerID)
-		require.NoError(t, err)
+	return testFixture{
+		orderService:    orderService,
+		repo:            repo,
+		eventDispatcher: eventDispatcher,
+	}
+}
 
-		require.NotNil(t, repo.store[orderID])
-		require.Len(t, eventDispatcher.events, 1)
-		require.Equal(t, model.OrderCreated{}.Type(), eventDispatcher.events[0].Type())
+func TestOrderService(t *testing.T) {
+	customerID := uuid.Must(uuid.NewV7())
+
+	t.Run("Create order", func(t *testing.T) {
+		f := setup()
+
+		orderID, err := f.orderService.CreateOrder(customerID)
+
+		require.NoError(t, err)
+		require.NotNil(t, f.repo.store[orderID])
+		require.Len(t, f.eventDispatcher.events, 1)
+		require.Equal(t, model.OrderCreated{}.Type(), f.eventDispatcher.events[0].Type())
+	})
+
+	t.Run("Delete order", func(t *testing.T) {
+		f := setup()
+		orderID, _ := f.orderService.CreateOrder(customerID)
+		f.eventDispatcher.events = nil
+
+		err := f.orderService.DeleteOrder(orderID)
+
+		require.NoError(t, err)
+		require.NotNil(t, f.repo.store[orderID].DeletedAt)
+		require.Len(t, f.eventDispatcher.events, 1)
+		require.Equal(t, model.OrderDeleted{}.Type(), f.eventDispatcher.events[0].Type())
 	})
 }
 

@@ -67,9 +67,14 @@ func (o orderService) CreateOrder(customerID uuid.UUID) (uuid.UUID, error) {
 }
 
 func (o orderService) DeleteOrder(orderID uuid.UUID) error {
-	// TODO implement me
-	var _ = orderID
-	panic("implement me")
+	err := o.repo.Delete(orderID)
+	if err != nil {
+		return err
+	}
+
+	return o.dispatcher.Dispatch(model.OrderDeleted{
+		OrderID: orderID,
+	})
 }
 
 func (o orderService) SetStatus(orderID uuid.UUID, status model.OrderStatus) error {
