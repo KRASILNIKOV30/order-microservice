@@ -1,0 +1,38 @@
+version: '3.3'
+
+services:
+  user:
+    image: user
+    container_name: user
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081" # GRPC API port
+    environment:
+     USER_DB_HOST: user-db
+     USER_DB_PORT: 3306
+     USER_DB_NAME: user
+     USER_DB_USER: user
+     USER_DB_PASSWORD: ${DB_PASSWORD}
+     USER_DB_MAX_CONN: 5
+    depends_on:
+      - user-db
+    restart: unless-stopped
+
+  user-db:
+    image: percona:8.0
+    container_name: user-db
+    environment:
+      MYSQL_DATABASE: user
+      MYSQL_USER: user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - user-db-data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  user-db-data:

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package User;
+
+option go_package = "/.;userinternal";
+
+service UserInternalService {
+  rpc Ping(PingRequest) returns (PingResponse);
+}
+
+message PingRequest {}
+message PingResponse {
+  string message = 1;
+}
