@@ -128,7 +128,7 @@ func (s *paymentService) ProcessPayment(paymentID uuid.UUID) error {
 	payment.Status = model.Completed
 	payment.UpdatedAt = time.Now()
 	if err := s.repo.StorePayment(payment); err != nil {
-		// TODO Откат списания?
+		// TODO Откат списания? вернуть исходную ошибку, так как не получится сохранить событие
 		return err
 	}
 

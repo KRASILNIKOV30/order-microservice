@@ -43,7 +43,7 @@ func newConnectionsContainer(
 	containerBuilder := func() error {
 		container = &connectionsContainer{}
 
-		db, err := initMySQL(config)
+		db, err := InitMySQL(config)
 		if err != nil {
 			return fmt.Errorf("failed to init DB for migrations: %w", err)
 		}
@@ -79,7 +79,7 @@ type connectionsContainer struct {
 	testConnection grpc.ClientConnInterface
 }
 
-func initMySQL(cfg *config) (db *sqlx.DB, err error) {
+func InitMySQL(cfg *config) (db *sqlx.DB, err error) {
 	db, err = sqlx.Connect("mysql", cfg.buildDSN())
 	if err != nil || db == nil {
 		return nil, fmt.Errorf("failed to connect to MySQL: %w", err)

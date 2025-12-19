@@ -25,7 +25,7 @@ func migrate(
 		Name:  "migrate",
 		Usage: "Apply database migrations",
 		Action: func(_ *cli.Context) error {
-			db, err := initMySQL(config)
+			db, err := InitMySQL(config)
 			if err != nil {
 				return err
 			}

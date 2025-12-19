@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	stdlog "log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -17,6 +19,10 @@ const appID = "notification"
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	if err := godotenv.Load(".env"); err != nil {
+		fmt.Println("Error loading .env file")
+	}
 
 	cnf, err := parseEnv()
 	if err != nil {

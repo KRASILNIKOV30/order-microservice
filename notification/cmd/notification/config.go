@@ -33,7 +33,7 @@ type config struct {
 
 func (c *config) buildDSN() string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s&multiStatements=true",
 		c.DBUser,
 		c.DBPassword,
 		c.DBHost,
